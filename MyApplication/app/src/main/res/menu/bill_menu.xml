@@ -4,7 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.mithun.myapplication.MainActivity">
     <item
+        android:id="@+id/action_print"
+        android:title="@string/menu_print"
+        android:icon="@drawable/icon_print"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_back"
         android:title="@string/menu_back"
+        android:icon="@drawable/icon_tick"
         app:showAsAction="ifRoom"/>
+
 </menu>
