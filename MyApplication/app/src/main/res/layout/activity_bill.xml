@@ -17,5 +17,14 @@
 
     </android.support.v7.widget.RecyclerView>
 
+    <TextView
+        android:id="@+id/txtTot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:textSize="25dp"
+        android:text="Total:" />
+
 
 </android.support.design.widget.CoordinatorLayout>

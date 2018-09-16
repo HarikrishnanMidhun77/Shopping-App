@@ -3,6 +3,8 @@ package com.example.mithun.myapplication;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -58,17 +60,21 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
     private List<Movie> movieList = new ArrayList<>();
     private RecyclerView recyclerView;
     private MoviesAdapter mAdapter;
+    SharedPreferences shared;
     String message;
     String[] items;
     String[] elems;
     TextView tot;
+    ShoDb sdb;
     private CoordinatorLayout coordinatorLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bill);
+
+        sdb=new ShoDb(this,null);
         Intent intent = getIntent();
-       // tot = (TextView) findViewById(R.id.txtTotal);
+        tot = (TextView) findViewById(R.id.txtTot);
         message = intent.getStringExtra("bill_items");
         Toast.makeText(getApplicationContext(), "Items: " + message, Toast.LENGTH_SHORT).show();
 
@@ -105,9 +111,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
         // attaching the touch helper to recycler view
         new ItemTouchHelper(itemTouchHelperCallback1).attachToRecyclerView(recyclerView);
     }
-
-
-    private void prepareMovieData() {
+ /*   private void prepareMovieData() {
         Movie movie;
         String it, comp, price, qty;
         float total = 0;
@@ -121,9 +125,31 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
             total = total + (Float.valueOf(price) * Float.valueOf(qty));
             movie = new Movie(comp, it, price + "(" + qty + ")");
             movieList.add(movie);
-        }
-        movie = new Movie("Total", "amount", String.valueOf(total));
-        movieList.add(movie);
+        }*/
+
+    private void prepareMovieData() {
+        Movie movie;
+        String it, comp, price, qty;
+        float total = 0;
+        shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+        String bil = (shared.getString("bno", ""));
+        Cursor c=sdb.findHandler(bil);
+       // if (c.moveToFirst()) {
+        //    while (!c.isAfterLast()) {
+        while (c.moveToNext()){
+                it=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_type));
+                comp=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_comp));
+                price=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_price));
+                qty=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_qnty));
+                total = total + (Float.valueOf(price) * Float.valueOf(qty));
+                movie = new Movie(comp, it, price + "(" + qty + ")");
+                movieList.add(movie);
+            }
+       // }
+
+     tot.setText("Total:    "+String.valueOf(total));
+      //  movie = new Movie("Total", "amount", String.valueOf(total));
+       // movieList.add(movie);
         // tot.setText(String.valueOf(total));
 
     }
@@ -141,7 +167,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
         switch (item.getItemId()) {
             case R.id.action_back:
                 // User chose the "Settings" item, show the app settings UI...
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, HomeActivity.class);
                 startActivity(intent);
                 // Toast.makeText(getApplicationContext(), "Items: " + items, Toast.LENGTH_SHORT).show();
                 return true;
