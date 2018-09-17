@@ -206,6 +206,25 @@ ItemTouchHelper.SimpleCallback itemTouchHelperCallback2=new ItemTouchHelper.Simp
                     // showing snack bar with Undo option
                     Snackbar snackbar = Snackbar
                             .make(coordinatorLayout, name + " removed from cart!", Snackbar.LENGTH_LONG);
+                    snackbar.addCallback(new Snackbar.Callback() {
+
+                        @Override
+                        public void onDismissed(Snackbar snackbar, int event) {
+                            if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT) {
+                                //see Snackbar.Callback docs for event details
+                                shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+                                String bil = (shared.getString("bno", ""));
+                                sdb.deleteHandler(bil, deletedItem.getId());
+                                Toast.makeText(getApplicationContext(), deletedItem.getGenre() + " removed", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onShown(Snackbar snackbar) {
+
+                        }
+                    });
+
                     snackbar.setAction("UNDO", new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -225,10 +244,7 @@ ItemTouchHelper.SimpleCallback itemTouchHelperCallback2=new ItemTouchHelper.Simp
                     });
                     snackbar.setActionTextColor(Color.YELLOW);
                     snackbar.show();
-                    shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
-                    String bil = (shared.getString("bno", ""));
-                    sdb.deleteHandler(bil,deletedItem.getId());
-                    Toast.makeText(getApplicationContext(), deletedItem.getGenre()+" is deleted from db", Toast.LENGTH_SHORT).show();
+
 
                 }
             }
@@ -510,7 +526,7 @@ ItemTouchHelper.SimpleCallback itemTouchHelperCallback2=new ItemTouchHelper.Simp
      */
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
-        if (viewHolder instanceof MoviesAdapter.MyViewHolder) {
+     /*   if (viewHolder instanceof MoviesAdapter.MyViewHolder) {
             // get the removed item name to display it in snack bar
             String name = movieList.get(viewHolder.getAdapterPosition()).getTitle();
 
@@ -541,7 +557,7 @@ ItemTouchHelper.SimpleCallback itemTouchHelperCallback2=new ItemTouchHelper.Simp
             });
             snackbar.setActionTextColor(Color.YELLOW);
             snackbar.show();
-        }
+        }*/
     }
 
 
