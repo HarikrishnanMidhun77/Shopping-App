@@ -69,4 +69,5 @@ public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
     public interface RecyclerItemTouchHelperListener {
         void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position);
     }
+
 }

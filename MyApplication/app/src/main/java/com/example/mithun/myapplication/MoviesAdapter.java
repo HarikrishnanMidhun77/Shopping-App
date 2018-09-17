@@ -15,9 +15,13 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MyViewHold
 
     private List<Movie> moviesList;
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+
+
+    public class MyViewHolder extends RecyclerView.ViewHolder  {
         public TextView title, year, genre;
         public RelativeLayout viewForeground;
+
+
 
         public MyViewHolder(View view) {
             super(view);
@@ -25,7 +29,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MyViewHold
             genre = (TextView) view.findViewById(R.id.genre);
             year = (TextView) view.findViewById(R.id.year);
             viewForeground = view.findViewById(R.id.view_foreground);
+
         }
+
+
     }
 
 

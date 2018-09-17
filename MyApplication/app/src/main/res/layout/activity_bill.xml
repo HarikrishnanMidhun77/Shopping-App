@@ -11,7 +11,7 @@
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="60dp"
+        android:paddingBottom="65dp"
         android:scrollbars="vertical"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
@@ -23,9 +23,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:gravity="center|bottom"
-        android:paddingBottom="10dp"
-        android:textSize="25dp"
+        android:gravity="left|bottom"
+        android:paddingLeft="15dp"
+        android:paddingBottom="20dp"
+        android:textSize="20dp"
         android:text="Total:" />
 
     <android.support.design.widget.FloatingActionButton

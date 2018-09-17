@@ -2,6 +2,7 @@ package com.example.mithun.myapplication;
 
 
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -15,18 +16,21 @@ import android.os.Environment;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.InputType;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -97,13 +101,74 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+
         recyclerView.setAdapter(mAdapter);
+
         coordinatorLayout = findViewById(R.id.coordinator_layout);
         prepareMovieData();
 
+ItemTouchHelper.SimpleCallback itemTouchHelperCallback2=new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+    @Override
+    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        return false;
+    }
+
+    @Override
+    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
 
 
-        ItemTouchHelper.SimpleCallback itemTouchHelperCallback1 = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.UP) {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(Bill.this);
+        alertDialog.setTitle("Enter Quantity");
+        alertDialog.setMessage(movieList.get(viewHolder.getAdapterPosition()).getGenre());
+
+        final EditText input = new EditText(Bill.this);
+        input.setText("1");
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+        input.setSelectAllOnFocus(true);
+        input.setSelection(input.getText().length());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        input.setLayoutParams(lp);
+        alertDialog.setView(input);
+        // alertDialog.setIcon(R.drawable.key);
+
+        alertDialog.setPositiveButton("YES",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                       String q = input.getText().toString();
+                        String i=movieList.get(viewHolder.getAdapterPosition()).getId();
+                        final Movie deletedItem = movieList.get(viewHolder.getAdapterPosition());
+                        final int deletedIndex = viewHolder.getAdapterPosition();
+                        sdb.updateHandler(i,q);
+                        String ot  = tot.getText().toString().replaceAll("[^0-9].", "");
+                        String[] od= deletedItem.getYear().split("\\(.");
+                        Float t= Float.valueOf(ot)-Float.valueOf(od[0]);
+                        t= t+(Float.valueOf(q)*Float.valueOf(od[0]));
+                        tot.setText("Total:    Rs. "+String.valueOf(t));
+                        deletedItem.setYear(od[0]+"("+q+")");
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+
+        alertDialog.setNegativeButton("NO",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+        alertDialog.show();
+
+
+
+    }
+};
+        new ItemTouchHelper(itemTouchHelperCallback2).attachToRecyclerView(recyclerView);
+
+
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback1 = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT ) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
@@ -126,8 +191,11 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
                     mAdapter.removeItem(viewHolder.getAdapterPosition());
 
                     String ot  = tot.getText().toString().replaceAll("[^0-9].", "");
-                   String[] od= deletedItem.getYear().split("\\(.");
-                   Float t= Float.valueOf(ot)-Float.valueOf(od[0]);
+                   String[] od= deletedItem.getYear().split("\\(");
+                    String oq = od[1].replaceAll("[^0-9].", "");
+                    String[] t2=oq.split("\\)");
+                    oq=t2[0];
+                   Float t= Float.valueOf(ot)-(Float.valueOf(od[0])*Float.valueOf(oq));
 
                    // finish();
                    // startActivity(getIntent());
@@ -145,8 +213,12 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
                             // undo is selected, restore the deleted item
                             mAdapter.restoreItem(deletedItem, deletedIndex);
                             String ot  = tot.getText().toString().replaceAll("[^0-9].", "");
-                            String[] od= deletedItem.getYear().split("\\(.");
-                            Float t= Float.valueOf(ot)+Float.valueOf(od[0]);
+                            String[] od= deletedItem.getYear().split("\\(");
+                            String oq = od[1].replaceAll("[^0-9].", "");
+                            String[] t2=oq.split("\\)");
+                            oq=t2[0];
+                           // Float t= Float.valueOf(ot)+Float.valueOf(od[0]);
+                            Float t= Float.valueOf(ot)+(Float.valueOf(od[0])*Float.valueOf(oq));
                             tot.setText("Total:    Rs. "+String.valueOf(t));
 
                         }
