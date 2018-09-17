@@ -72,10 +72,15 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
     @Override
     public void onScanned(final Barcode barcode) {
         // play beep sound
-        barcodeReader.playBeep();
+       barcodeReader.playBeep();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                try {
+                    Thread.sleep(250);
+                }catch(Exception e){
+                   e.getStackTrace() ;
+                }
                 Toast.makeText(getApplicationContext(), "Barcode: " + barcode.displayValue, Toast.LENGTH_SHORT).show();
                 items=items+","+ barcode.displayValue;
                 String s=barcode.displayValue;
@@ -130,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
 
         });
 
-        Toast.makeText(this,"hello"+c+i+q+p,Toast.LENGTH_LONG).show();
+       // Toast.makeText(this,"hello"+c+i+q+p,Toast.LENGTH_LONG).show();
     }
 
     @Override

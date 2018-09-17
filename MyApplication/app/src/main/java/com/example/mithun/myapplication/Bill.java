@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.stetho.Stetho;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -57,6 +59,7 @@ import java.util.Locale;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
 public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener{
+
     private List<Movie> movieList = new ArrayList<>();
     private RecyclerView recyclerView;
     private MoviesAdapter mAdapter;
@@ -71,6 +74,16 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bill);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.btn_new);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Click action
+                Intent intent = new Intent(Bill.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
 
         sdb=new ShoDb(this,null);
         Intent intent = getIntent();
@@ -100,7 +113,55 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 // Row is swiped from recycler view
                 // remove it from adapter
+                if (viewHolder instanceof MoviesAdapter.MyViewHolder) {
+                    // get the removed item name to display it in snack bar
+                    String name = movieList.get(viewHolder.getAdapterPosition()).getTitle();
+
+                    // backup of removed item for undo purpose
+                    final Movie deletedItem = movieList.get(viewHolder.getAdapterPosition());
+                    final int deletedIndex = viewHolder.getAdapterPosition();
+
+                    // remove the item from recycler view
+                    //
+                    mAdapter.removeItem(viewHolder.getAdapterPosition());
+
+                    String ot  = tot.getText().toString().replaceAll("[^0-9].", "");
+                   String[] od= deletedItem.getYear().split("\\(.");
+                   Float t= Float.valueOf(ot)-Float.valueOf(od[0]);
+
+                   // finish();
+                   // startActivity(getIntent());
+
+                    mAdapter.notifyDataSetChanged();
+                    tot.setText("Total:    Rs. "+String.valueOf(t));
+                   // tot.setText(String.valueOf(t));
+                    // showing snack bar with Undo option
+                    Snackbar snackbar = Snackbar
+                            .make(coordinatorLayout, name + " removed from cart!", Snackbar.LENGTH_LONG);
+                    snackbar.setAction("UNDO", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                            // undo is selected, restore the deleted item
+                            mAdapter.restoreItem(deletedItem, deletedIndex);
+                            String ot  = tot.getText().toString().replaceAll("[^0-9].", "");
+                            String[] od= deletedItem.getYear().split("\\(.");
+                            Float t= Float.valueOf(ot)+Float.valueOf(od[0]);
+                            tot.setText("Total:    Rs. "+String.valueOf(t));
+
+                        }
+                    });
+                    snackbar.setActionTextColor(Color.YELLOW);
+                    snackbar.show();
+                    shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+                    String bil = (shared.getString("bno", ""));
+                    sdb.deleteHandler(bil,deletedItem.getId());
+                    Toast.makeText(getApplicationContext(), deletedItem.getGenre()+" is deleted from db", Toast.LENGTH_SHORT).show();
+
+                }
             }
+
+
 
             @Override
             public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
@@ -129,7 +190,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
 
     private void prepareMovieData() {
         Movie movie;
-        String it, comp, price, qty;
+        String it, comp, price, qty,id;
         float total = 0;
         shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
         String bil = (shared.getString("bno", ""));
@@ -137,17 +198,18 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
        // if (c.moveToFirst()) {
         //    while (!c.isAfterLast()) {
         while (c.moveToNext()){
+            id=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_id));
                 it=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_type));
                 comp=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_comp));
                 price=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_price));
                 qty=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_qnty));
                 total = total + (Float.valueOf(price) * Float.valueOf(qty));
-                movie = new Movie(comp, it, price + "(" + qty + ")");
+                movie = new Movie(id,comp, it, price + "(" + qty + ")");
                 movieList.add(movie);
             }
        // }
 
-     tot.setText("Total:    "+String.valueOf(total));
+     tot.setText("Total:    Rs. "+String.valueOf(total));
       //  movie = new Movie("Total", "amount", String.valueOf(total));
        // movieList.add(movie);
         // tot.setText(String.valueOf(total));
@@ -172,9 +234,13 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
                 // Toast.makeText(getApplicationContext(), "Items: " + items, Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_print:
+                shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+                String bil = (shared.getString("bno", ""));
+
                 createPDF();
 
-                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/shopify/bill.pdf");
+                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/shopify/"+bil+".pdf");
+
                 Intent target = new Intent(Intent.ACTION_VIEW);
                 target.setDataAndType(Uri.fromFile(file),"application/pdf");
                 target.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -198,7 +264,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
     }
 
@@ -207,7 +273,10 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
 
 
         try {
-            String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/shopify/";
+            shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+            String bil = (shared.getString("bno", ""));
+
+            String path = Environment.getExternalStorageDirectory().getAbsolutePath() +"/shopify/";
             boolean ab;
             File dir = new File(path);
             if (!dir.exists())
@@ -216,7 +285,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
             Log.d("PDFCreator", "PDF Path: " + path);
 
 
-            File file = new File(dir, "bill.pdf");
+            File file = new File(dir, bil+".pdf");
             FileOutputStream fOut = new FileOutputStream(file);
 
             PdfWriter.getInstance(doc, fOut);
@@ -258,7 +327,33 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
             Paragraph p1[] = new Paragraph[50];
             // Font paraFont= new Font(Font.FontFamily.COURIER);
 
-            for (int i = 1; i < items.length; i++) {
+
+
+            // if (c.moveToFirst()) {
+            //    while (!c.isAfterLast()) {
+            int i=0;
+            Cursor c=sdb.findHandler(bil);
+            while (c.moveToNext()){
+                it=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_type));
+                comp=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_comp));
+                price=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_price));
+                qty=c.getString(c.getColumnIndex(ShoDb.COLUMN_item_qnty));
+                total = total + (Float.valueOf(price) * Float.valueOf(qty));
+
+                str = "Item :     " + comp+"( "+it + ")\nprice       :Rs. " + price + "\nQuantity         :" + qty;
+                p1[i] = new Paragraph(str);
+                p1[i].setAlignment(Paragraph.ALIGN_CENTER);
+                p1[i].setFont(paraFont);
+                doc.add(p1[i]);
+
+                doc.add(new Paragraph(""));
+                doc.add(new Chunk(lineSeparator));
+                doc.add(new Paragraph(""));
+             i++;
+            }
+
+
+          /*  for (int i = 1; i < items.length; i++) {
                 elems = items[i].split(":");
                 it = elems[0];
                 comp = elems[1];
@@ -275,7 +370,7 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
                 doc.add(new Paragraph(""));
                 doc.add(new Chunk(lineSeparator));
                 doc.add(new Paragraph(""));
-            }
+            }*/
 
 
             Chunk titl2 = new Chunk("Total:     " + String.valueOf(total), paraFont);
@@ -352,8 +447,15 @@ public class Bill extends AppCompatActivity implements RecyclerItemTouchHelper.R
             final int deletedIndex = viewHolder.getAdapterPosition();
 
             // remove the item from recycler view
-            mAdapter.removeItem(viewHolder.getAdapterPosition());
-
+          //  mAdapter.removeItem(viewHolder.getAdapterPosition());
+            shared = getSharedPreferences("ShoPref", MODE_PRIVATE);
+            String bil = (shared.getString("bno", ""));
+            sdb.deleteHandler(bil,deletedItem.getId());
+            finish();
+            startActivity(getIntent());
+            mAdapter.notifyItemRemoved(position);
+            mAdapter.notifyItemRangeChanged(position, movieList.size());
+            mAdapter.notifyDataSetChanged();
             // showing snack bar with Undo option
             Snackbar snackbar = Snackbar
                     .make(coordinatorLayout, name + " removed from cart!", Snackbar.LENGTH_LONG);

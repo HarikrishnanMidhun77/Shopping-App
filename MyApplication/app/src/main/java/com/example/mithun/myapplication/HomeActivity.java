@@ -10,6 +10,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 public class HomeActivity extends AppCompatActivity {
@@ -25,11 +29,16 @@ public class HomeActivity extends AppCompatActivity {
         btnShop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                Date myDate = Calendar.getInstance().getTime();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+                String date = dateFormat.format(myDate);
+
                 r= new Random();
                 sharedpreferences = getSharedPreferences("ShoPref", Context.MODE_PRIVATE);
                 int randomNumber = r.nextInt(500);
                 SharedPreferences.Editor editor = sharedpreferences.edit();
-                editor.putString("bno", String.valueOf(randomNumber));
+                editor.putString("bno", String.valueOf(myDate));
                 editor.commit();
                // Toast.makeText(this,"hello "+String.valueOf(randomNumber),Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);

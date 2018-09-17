@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class ShoDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "shodb.db";
     public static final String TABLE_NAME = "bills";
     public static final String COLUMN_item_id = "item_id";
@@ -26,14 +26,18 @@ public class ShoDb extends SQLiteOpenHelper {
     }
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_item_id+
-                "INTEGER PRIMARYKEY," + COLUMN_bill_no + " TEXT,"+COLUMN_item_type + " TEXT,"+ COLUMN_item_comp + " TEXT,"+COLUMN_item_qnty+ " TEXT,"+COLUMN_item_price + " TEXT,"+COLUMN_total + "TEXT )";
+        String DT="DROP TABLE "+TABLE_NAME ;
+        db.execSQL(DT);
+        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_item_id+ " INTEGER PRIMARY KEY," + COLUMN_bill_no + " TEXT,"+COLUMN_item_type + " TEXT,"+ COLUMN_item_comp + " TEXT,"+COLUMN_item_qnty+ " TEXT,"+COLUMN_item_price + " TEXT,"+COLUMN_total + "TEXT )";
         db.execSQL(CREATE_TABLE);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-
+    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+        String DT="DROP TABLE "+TABLE_NAME ;
+        db.execSQL(DT);
+        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_item_id+ " INTEGER PRIMARY KEY," + COLUMN_bill_no + " TEXT,"+COLUMN_item_type + " TEXT,"+ COLUMN_item_comp + " TEXT,"+COLUMN_item_qnty+ " TEXT,"+COLUMN_item_price + " TEXT,"+COLUMN_total + "TEXT )";
+        db.execSQL(CREATE_TABLE);
     }
     //public String loadHandler() {}
     public void addHandler(String bno,String comp,String item,String qnty, String price ) {
@@ -59,4 +63,17 @@ public class ShoDb extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery(query, null);
     }
    // public boolean updateHandler(int ID, String name) {}
+   public void deleteHandler(String bno,String id) {
+      // String query = "delete from " + TABLE_NAME + " WHERE " + COLUMN_bill_no + " = " + "'" + bno + "' and "+COLUMN_item_type + " = "+ "'"+it+"'";
+       SQLiteDatabase db = this.getWritableDatabase();
+       db.delete(TABLE_NAME,COLUMN_bill_no + " = " + "'" + bno + "' and "+COLUMN_item_id + " = "+id,null);
+      // Cursor cursor = db.rawQuery(query, null);
+   }
+    public void updateHandler(String id,String q) {
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_item_qnty,q); //These Fields should be your String values of actual column names
+
+        SQLiteDatabase db = this.getWritableDatabase();
+       db.update(TABLE_NAME, cv, COLUMN_item_id+" = "+id, null);
+    }
 }
